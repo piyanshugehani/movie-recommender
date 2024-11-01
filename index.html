@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Movie Recommendation</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex items-center justify-center font-sans">
+
+  <!-- Main Container -->
+  <div class="w-full max-w-lg p-8 bg-gray-800 rounded-lg shadow-lg">
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-white mb-2">Movie Recommendations</h1>
+      <p class="text-gray-400">Choose a movie to get recommendations</p>
+    </div>
+
+    <!-- Movie Selection Form -->
+    <form id="recommendationForm" class="space-y-6">
+      <div>
+        <label for="movieSelect" class="block text-gray-300 font-semibold">Select a Movie</label>
+        <select id="movieSelect" class="w-full mt-2 p-3 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          <option value="" disabled selected>Choose a movie</option>
+          <option value="inception">Inception</option>
+          <option value="the-matrix">The Matrix</option>
+          <option value="the-godfather">The Godfather</option>
+          <option value="titanic">Titanic</option>
+          <option value="avatar">Avatar</option>
+        </select>
+      </div>
+
+      <button type="button" id="getRecommendation" class="w-full py-3 bg-indigo-600 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300">Get Recommendations</button>
+    </form>
+
+    <!-- Recommendation Output -->
+    <div id="recommendations" class="mt-8 text-center space-y-4 hidden">
+      <h2 class="text-xl font-bold">Recommended Movies</h2>
+      <div id="recommendationList" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Recommendations will appear here as cards -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function query(data) {
+      const response = await fetch(
+        "http://localhost:3000/api/v1/prediction/6d35851c-aa34-436f-9d23-5f9cfe4b2586",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        }
+      );
+      const result = await response.json();
+      return result;
+    }
+
+    document.getElementById('getRecommendation').addEventListener('click', async function() {
+      const movie = document.getElementById('movieSelect').value;
+
+      if (movie) {
+        const response = await query({"question": `Can you recommend movies similar to ${movie}?`});
+
+        const recommendationContainer = document.getElementById('recommendations');
+        const recommendationListElement = document.getElementById('recommendationList');
+
+        // Clear previous recommendations
+        recommendationListElement.innerHTML = "";
+
+        // Extract recommendations from the response
+        const recommendations = response.usedTools[0].toolOutput.split('\n').filter(line => line.includes('movie_title:')).map(line => {
+          const parts = line.split('movie_title: ');
+          return parts[1] ? parts[1].split('\ngenre:')[0].trim() : null;
+        }).filter(Boolean);
+
+        // Display recommendations as cards
+        if (recommendations.length > 0) {
+          recommendations.forEach(movieTitle => {
+            const card = document.createElement('div');
+            card.className = "bg-gray-700 p-4 rounded-lg shadow-md transition transform hover:scale-105";
+            card.innerHTML = `
+              <h3 class="text-xl font-bold">${movieTitle}</h3>
+              <p class="text-gray-400">Genre: Sci-Fi</p>
+              <p class="text-gray-400">Rating: 4.5</p>
+            `;
+            recommendationListElement.appendChild(card);
+          });
+        } else {
+          const listItem = document.createElement('div');
+          listItem.className = "text-gray-300";
+          listItem.textContent = "No recommendations found.";
+          recommendationListElement.appendChild(listItem);
+        }
+
+        recommendationContainer.classList.remove('hidden');
+      } else {
+        alert("Please select a movie to get recommendations.");
+      }
+    });
+  </script>
+
+</body>
+</html>
