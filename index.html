@@ -44,12 +44,9 @@
 
   <script>
     async function query(data) {
-        const baseURL = window.location.hostname === 'localhost'
-      ? "http://localhost:3000/api/v1/prediction/6d35851c-aa34-436f-9d23-5f9cfe4b2586"
-      : "https://movie-recommender-pearl.vercel.app//api/v1/prediction/6d35851c-aa34-436f-9d23-5f9cfe4b2586"; // Replace with your production URL
-
+        
       const response = await fetch(
-        baseURL,
+        "http://localhost:3000/api/v1/prediction/6d35851c-aa34-436f-9d23-5f9cfe4b2586",
         {
           method: "POST",
           headers: {
